@@ -34,15 +34,19 @@ const (
 	cancelLabel      = "Cancel"
 )
 
-func ConfirmIssueSubmission(allowPreview bool, allowMetadata bool) (Action, error) {
-	return confirmSubmission(allowPreview, allowMetadata, false, false)
+type Prompt interface {
+	Select(string, string, []string) (int, error)
 }
 
-func ConfirmPRSubmission(allowPreview, allowMetadata, isDraft bool) (Action, error) {
-	return confirmSubmission(allowPreview, allowMetadata, true, isDraft)
+func ConfirmIssueSubmission(p Prompt, allowPreview bool, allowMetadata bool) (Action, error) {
+	return confirmSubmission(p, allowPreview, allowMetadata, false, false)
 }
 
-func confirmSubmission(allowPreview, allowMetadata, allowDraft, isDraft bool) (Action, error) {
+func ConfirmPRSubmission(p Prompt, allowPreview, allowMetadata, isDraft bool) (Action, error) {
+	return confirmSubmission(p, allowPreview, allowMetadata, true, isDraft)
+}
+
+func confirmSubmission(p Prompt, allowPreview, allowMetadata, allowDraft, isDraft bool) (Action, error) {
 	var options []string
 	if !isDraft {
 		options = append(options, submitLabel)
@@ -58,26 +62,12 @@ func confirmSubmission(allowPreview, allowMetadata, allowDraft, isDraft bool) (A
 	}
 	options = append(options, cancelLabel)
 
-	confirmAnswers := struct {
-		Confirmation int
-	}{}
-	confirmQs := []*survey.Question{
-		{
-			Name: "confirmation",
-			Prompt: &survey.Select{
-				Message: "What's next?",
-				Options: options,
-			},
-		},
-	}
-
-	//nolint:staticcheck // SA1019: prompt.SurveyAsk is deprecated: use Prompter
-	err := prompt.SurveyAsk(confirmQs, &confirmAnswers)
+	result, err := p.Select("What's next?", "", options)
 	if err != nil {
 		return -1, fmt.Errorf("could not prompt: %w", err)
 	}
 
-	switch options[confirmAnswers.Confirmation] {
+	switch options[result] {
 	case submitLabel:
 		return SubmitAction, nil
 	case submitDraftLabel:
@@ -89,7 +79,7 @@ func confirmSubmission(allowPreview, allowMetadata, allowDraft, isDraft bool) (A
 	case cancelLabel:
 		return CancelAction, nil
 	default:
-		return -1, fmt.Errorf("invalid index: %d", confirmAnswers.Confirmation)
+		return -1, fmt.Errorf("invalid index: %d", result)
 	}
 }
 

@@ -23,6 +23,7 @@ type CreateOptions struct {
 	IO         *iostreams.IOStreams
 	BaseRepo   func() (ghrepo.Interface, error)
 	Browser    browser.Browser
+	Prompter   prShared.Prompt
 
 	RootDirOverride string
 
@@ -46,6 +47,7 @@ func NewCmdCreate(f *cmdutil.Factory, runF func(*CreateOptions) error) *cobra.Co
 		HttpClient: f.HttpClient,
 		Config:     f.Config,
 		Browser:    f.Browser,
+		Prompter:   f.Prompter,
 	}
 
 	var bodyFile string
@@ -239,7 +241,7 @@ func createRun(opts *CreateOptions) (err error) {
 		}
 
 		allowPreview := !tb.HasMetadata() && prShared.ValidURL(openURL)
-		action, err = prShared.ConfirmIssueSubmission(allowPreview, repo.ViewerCanTriage())
+		action, err = prShared.ConfirmIssueSubmission(opts.Prompter, allowPreview, repo.ViewerCanTriage())
 		if err != nil {
 			err = fmt.Errorf("unable to confirm: %w", err)
 			return
@@ -257,7 +259,7 @@ func createRun(opts *CreateOptions) (err error) {
 				return
 			}
 
-			action, err = prShared.ConfirmIssueSubmission(!tb.HasMetadata(), false)
+			action, err = prShared.ConfirmIssueSubmission(opts.Prompter, !tb.HasMetadata(), false)
 			if err != nil {
 				return
 			}

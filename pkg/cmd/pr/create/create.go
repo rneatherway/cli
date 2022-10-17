@@ -25,10 +25,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type iprompter interface {
-	Select(string, string, []string) (int, error)
-}
-
 type CreateOptions struct {
 	// This struct stores user input and factory functions
 	HttpClient func() (*http.Client, error)
@@ -37,7 +33,7 @@ type CreateOptions struct {
 	Remotes    func() (context.Remotes, error)
 	Branch     func() (string, error)
 	Browser    browser.Browser
-	Prompter   iprompter
+	Prompter   shared.Prompt
 	Finder     shared.PRFinder
 
 	TitleProvided bool
@@ -315,7 +311,7 @@ func createRun(opts *CreateOptions) (err error) {
 
 	allowPreview := !state.HasMetadata() && shared.ValidURL(openURL)
 	allowMetadata := ctx.BaseRepo.ViewerCanTriage()
-	action, err := shared.ConfirmPRSubmission(allowPreview, allowMetadata, state.Draft)
+	action, err := shared.ConfirmPRSubmission(opts.Prompter, allowPreview, allowMetadata, state.Draft)
 	if err != nil {
 		return fmt.Errorf("unable to confirm: %w", err)
 	}
@@ -332,7 +328,7 @@ func createRun(opts *CreateOptions) (err error) {
 			return
 		}
 
-		action, err = shared.ConfirmPRSubmission(!state.HasMetadata(), false, state.Draft)
+		action, err = shared.ConfirmPRSubmission(opts.Prompter, !state.HasMetadata(), false, state.Draft)
 		if err != nil {
 			return
 		}

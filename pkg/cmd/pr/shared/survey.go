@@ -34,6 +34,7 @@ const (
 )
 
 type Prompt interface {
+	Input(string, string) (string, error)
 	Select(string, string, []string) (int, error)
 	MarkdownEditor(string, string, bool) (string, error)
 }
@@ -107,29 +108,17 @@ func BodySurvey(p Prompt, state *IssueMetadataState, templateContent string) err
 	return nil
 }
 
-func TitleSurvey(state *IssueMetadataState) error {
-	preTitle := state.Title
-
-	// TODO should just be an AskOne but ran into problems with the stubber
-	qs := []*survey.Question{
-		{
-			Name: "Title",
-			Prompt: &survey.Input{
-				Message: "Title",
-				Default: state.Title,
-			},
-		},
-	}
-
-	//nolint:staticcheck // SA1019: prompt.SurveyAsk is deprecated: use Prompter
-	err := prompt.SurveyAsk(qs, state)
+func TitleSurvey(p Prompt, state *IssueMetadataState) error {
+	result, err := p.Input("Title", state.Title)
 	if err != nil {
 		return err
 	}
 
-	if preTitle != state.Title {
+	if result != state.Title {
 		state.MarkDirty()
 	}
+
+	state.Title = result
 
 	return nil
 }

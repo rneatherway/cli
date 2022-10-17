@@ -797,11 +797,14 @@ func Test_createRun(t *testing.T) {
 			cmdStubs: func(cs *run.CommandStubber) {
 				cs.Register(`git( .+)? log( .+)? origin/master\.\.\.feature`, 0, "")
 			},
-			askStubs: func(as *prompt.AskStubber) {
-				// TODO
-				as.StubPrompt("Title").AnswerDefault()
-			},
 			promptStubs: func(pm *prompter.PrompterMock) {
+				pm.InputFunc = func(p, d string) (string, error) {
+					if p == "Title" {
+						return d, nil
+					} else {
+						return "", prompter.NoSuchPromptErr(p)
+					}
+				}
 				pm.MarkdownEditorFunc = func(p, d string, ba bool) (string, error) {
 					if p == "Body" {
 						return d, nil

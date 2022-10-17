@@ -405,13 +405,14 @@ func TestIssueCreate_recover(t *testing.T) {
 			assert.Equal(t, []interface{}{"BUGID", "TODOID"}, inputs["labelIds"])
 		}))
 
-	//nolint:staticcheck // SA1019: prompt.NewAskStubber is deprecated: use PrompterMock
-	as := prompt.NewAskStubber(t)
-
-	// TODO fix this
-	as.StubPrompt("Title").AnswerDefault()
-
 	pm := &prompter.PrompterMock{}
+	pm.InputFunc = func(p, d string) (string, error) {
+		if p == "Title" {
+			return d, nil
+		} else {
+			return "", prompter.NoSuchPromptErr(p)
+		}
+	}
 	pm.MarkdownEditorFunc = func(p, d string, ba bool) (string, error) {
 		if p == "Body" {
 			return d, nil
@@ -532,13 +533,14 @@ func TestIssueCreate_continueInBrowser(t *testing.T) {
 			} } }`),
 	)
 
-	// TODO
-	//nolint:staticcheck // SA1019: prompt.NewAskStubber is deprecated: use PrompterMock
-	as := prompt.NewAskStubber(t)
-
-	as.StubPrompt("Title").AnswerWith("hello")
-
 	pm := &prompter.PrompterMock{}
+	pm.InputFunc = func(p, d string) (string, error) {
+		if p == "Title" {
+			return "hello", nil
+		} else {
+			return "", prompter.NoSuchPromptErr(p)
+		}
+	}
 	pm.SelectFunc = func(p, _ string, opts []string) (int, error) {
 		if p == "What's next?" {
 			return prompter.IndexFor(opts, "Continue in browser")

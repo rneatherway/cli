@@ -268,7 +268,7 @@ func createRun(opts *CreateOptions) (err error) {
 	}
 
 	if !opts.TitleProvided {
-		err = shared.TitleSurvey(state)
+		err = shared.TitleSurvey(opts.Prompter, state)
 		if err != nil {
 			return
 		}

@@ -199,7 +199,7 @@ func createRun(opts *CreateOptions) (err error) {
 		defer prShared.PreserveInput(opts.IO, &tb, &err)()
 
 		if opts.Title == "" {
-			err = prShared.TitleSurvey(&tb)
+			err = prShared.TitleSurvey(opts.Prompter, &tb)
 			if err != nil {
 				return
 			}

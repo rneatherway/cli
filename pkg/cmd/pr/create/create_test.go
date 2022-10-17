@@ -488,9 +488,15 @@ func Test_createRun(t *testing.T) {
 				as.StubPrompt("Choose a template").
 					AssertOptions([]string{"template1", "template2", "Open a blank pull request"}).
 					AnswerWith("template1")
-				as.StubPrompt("Body").AnswerDefault()
 			},
 			promptStubs: func(pm *prompter.PrompterMock) {
+				pm.MarkdownEditorFunc = func(p, d string, ba bool) (string, error) {
+					if p == "Body" {
+						return d, nil
+					} else {
+						return "", prompter.NoSuchPromptErr(p)
+					}
+				}
 				pm.SelectFunc = func(p, _ string, opts []string) (int, error) {
 					if p == "What's next?" {
 						return 0, nil
@@ -735,9 +741,15 @@ func Test_createRun(t *testing.T) {
 			},
 			askStubs: func(as *prompt.AskStubber) {
 				as.StubPrompt("Choose a template").AnswerDefault()
-				as.StubPrompt("Body").AnswerDefault()
 			},
 			promptStubs: func(pm *prompter.PrompterMock) {
+				pm.MarkdownEditorFunc = func(p, d string, ba bool) (string, error) {
+					if p == "Body" {
+						return d, nil
+					} else {
+						return "", prompter.NoSuchPromptErr(p)
+					}
+				}
 				pm.SelectFunc = func(p, _ string, opts []string) (int, error) {
 					if p == "What's next?" {
 						return prompter.IndexFor(opts, "Submit as draft")
@@ -788,9 +800,15 @@ func Test_createRun(t *testing.T) {
 			askStubs: func(as *prompt.AskStubber) {
 				// TODO
 				as.StubPrompt("Title").AnswerDefault()
-				as.StubPrompt("Body").AnswerDefault()
 			},
 			promptStubs: func(pm *prompter.PrompterMock) {
+				pm.MarkdownEditorFunc = func(p, d string, ba bool) (string, error) {
+					if p == "Body" {
+						return d, nil
+					} else {
+						return "", prompter.NoSuchPromptErr(p)
+					}
+				}
 				pm.SelectFunc = func(p, _ string, opts []string) (int, error) {
 					if p == "What's next?" {
 						return 0, nil

@@ -11,7 +11,6 @@ import (
 	"github.com/cli/cli/v2/pkg/githubtemplate"
 	"github.com/cli/cli/v2/pkg/iostreams"
 	"github.com/cli/cli/v2/pkg/prompt"
-	"github.com/cli/cli/v2/pkg/surveyext"
 )
 
 type Action int
@@ -36,6 +35,7 @@ const (
 
 type Prompt interface {
 	Select(string, string, []string) (int, error)
+	MarkdownEditor(string, string, bool) (string, error)
 }
 
 func ConfirmIssueSubmission(p Prompt, allowPreview bool, allowMetadata bool) (Action, error) {
@@ -83,7 +83,7 @@ func confirmSubmission(p Prompt, allowPreview, allowMetadata, allowDraft, isDraf
 	}
 }
 
-func BodySurvey(state *IssueMetadataState, templateContent, editorCommand string) error {
+func BodySurvey(p Prompt, state *IssueMetadataState, templateContent string) error {
 	if templateContent != "" {
 		if state.Body != "" {
 			// prevent excessive newlines between default body and template
@@ -93,35 +93,16 @@ func BodySurvey(state *IssueMetadataState, templateContent, editorCommand string
 		state.Body += templateContent
 	}
 
-	preBody := state.Body
-
-	// TODO should just be an AskOne but ran into problems with the stubber
-	qs := []*survey.Question{
-		{
-			Name: "Body",
-			Prompt: &surveyext.GhEditor{
-				BlankAllowed:  true,
-				EditorCommand: editorCommand,
-				Editor: &survey.Editor{
-					Message:       "Body",
-					FileName:      "*.md",
-					Default:       state.Body,
-					HideDefault:   true,
-					AppendDefault: true,
-				},
-			},
-		},
-	}
-
-	//nolint:staticcheck // SA1019: prompt.SurveyAsk is deprecated: use Prompter
-	err := prompt.SurveyAsk(qs, state)
+	result, err := p.MarkdownEditor("Body", state.Body, true)
 	if err != nil {
 		return err
 	}
 
-	if preBody != state.Body {
+	if state.Body != result {
 		state.MarkDirty()
 	}
+
+	state.Body = result
 
 	return nil
 }

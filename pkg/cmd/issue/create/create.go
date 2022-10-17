@@ -196,12 +196,6 @@ func createRun(opts *CreateOptions) (err error) {
 	var openURL string
 
 	if opts.Interactive {
-		var editorCommand string
-		editorCommand, err = cmdutil.DetermineEditor(opts.Config)
-		if err != nil {
-			return
-		}
-
 		defer prShared.PreserveInput(opts.IO, &tb, &err)()
 
 		if opts.Title == "" {
@@ -229,7 +223,7 @@ func createRun(opts *CreateOptions) (err error) {
 				}
 			}
 
-			err = prShared.BodySurvey(&tb, templateContent, editorCommand)
+			err = prShared.BodySurvey(opts.Prompter, &tb, templateContent)
 			if err != nil {
 				return
 			}

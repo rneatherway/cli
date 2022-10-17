@@ -274,11 +274,6 @@ func createRun(opts *CreateOptions) (err error) {
 		}
 	}
 
-	editorCommand, err := cmdutil.DetermineEditor(opts.Config)
-	if err != nil {
-		return
-	}
-
 	defer shared.PreserveInput(opts.IO, state, &err)()
 
 	if !opts.BodyProvided {
@@ -298,7 +293,7 @@ func createRun(opts *CreateOptions) (err error) {
 			}
 		}
 
-		err = shared.BodySurvey(state, templateContent, editorCommand)
+		err = shared.BodySurvey(opts.Prompter, state, templateContent)
 		if err != nil {
 			return
 		}
